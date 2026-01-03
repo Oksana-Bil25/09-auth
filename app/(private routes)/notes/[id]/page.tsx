@@ -14,51 +14,45 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  const note = await fetchNoteByIdServer(id);
 
-  try {
-    const note = await fetchNoteByIdServer(id);
-
-    return {
-      title: `${note.title} | NoteHub`,
-      description: note.content.substring(0, 150),
-      openGraph: {
-        title: note.title,
-        description: note.content.substring(0, 150),
-        url: `https://08-zustand-tau-two.vercel.app/notes/${id}`,
-        images: [
-          {
-            url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
-            alt: note.title,
-          },
-        ],
-      },
-    };
-  } catch {
+  if (!note) {
     return {
       title: "Note Not Found | NoteHub",
     };
   }
+
+  return {
+    title: `${note.title} | NoteHub`,
+    description: note.content.substring(0, 150),
+    openGraph: {
+      title: note.title,
+      description: note.content.substring(0, 150),
+      url: `https://08-zustand-tau-two.vercel.app/notes/${id}`,
+      images: [
+        {
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+          alt: note.title,
+        },
+      ],
+    },
+  };
 }
 
 export default async function NotePage({ params }: Props) {
   const { id } = await params;
   const queryClient = new QueryClient();
 
-  try {
-    await queryClient.prefetchQuery({
-      queryKey: ["note", id],
+  const note = await queryClient.fetchQuery({
+    queryKey: ["note", id],
+    queryFn: () => fetchNoteByIdServer(id),
+  });
 
-      queryFn: () => fetchNoteByIdServer(id),
-    });
-  } catch {
+  if (!note) {
     return notFound();
   }
 
   const state = dehydrate(queryClient);
-
-  const noteData = state.queries.find((q) => q.queryKey[0] === "note")?.state
-    .data;
-  if (!noteData) return notFound();
 
   return (
     <HydrationBoundary state={state}>

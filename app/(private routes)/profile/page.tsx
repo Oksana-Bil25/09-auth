@@ -1,12 +1,22 @@
-"use client";
-
-import Link from "next/link";
+import { Metadata } from "next";
 import Image from "next/image";
-import { useAuthStore } from "@/lib/store/authStore";
+import Link from "next/link";
+import { getMeServer } from "@/lib/api/serverApi";
+import { redirect } from "next/navigation";
 import css from "./ProfilePage.module.css";
+export const dynamic = "force-dynamic";
 
-export default function ProfilePage() {
-  const { user } = useAuthStore();
+export const metadata: Metadata = {
+  title: "Profile | NoteHub",
+  description: "View your personal profile information",
+};
+
+export default async function ProfilePage() {
+  const user = await getMeServer();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
 
   return (
     <main className={css.mainContent}>
@@ -20,7 +30,7 @@ export default function ProfilePage() {
 
         <div className={css.avatarWrapper}>
           <Image
-            src={user?.avatar || "/default-avatar.png"}
+            src={user.avatar || "/default-avatar.png"}
             alt="User Avatar"
             width={120}
             height={120}
@@ -30,8 +40,12 @@ export default function ProfilePage() {
         </div>
 
         <div className={css.profileInfo}>
-          <p>Username: {user?.username || "Username"}</p>
-          <p>Email: {user?.email || "Email"}</p>
+          <p>
+            <strong>Username:</strong> {user.username}
+          </p>
+          <p>
+            <strong>Email:</strong> {user.email}
+          </p>
         </div>
       </div>
     </main>

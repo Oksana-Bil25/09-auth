@@ -1,28 +1,32 @@
 import { cookies } from "next/headers";
-import axios from "axios";
+import { AxiosResponse, isAxiosError } from "axios";
+import { noteInstance } from "./api";
 import { User } from "@/types/user";
+import { Note } from "@/types/note";
 import { FetchNotesParams } from "./clientApi";
-
-const serverInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL + "/api",
-});
 
 const getAuthHeaders = async () => {
   const cookieStore = await cookies();
-
   const allCookies = cookieStore.toString();
-
   return {
     Cookie: allCookies,
   };
 };
 
-// --- СЕРВЕРНІ ЗАПИТИ ---
+export const checkSession = async (
+  refreshToken: string
+): Promise<AxiosResponse> => {
+  return await noteInstance.get("/auth/session", {
+    headers: {
+      Authorization: `Bearer ${refreshToken}`,
+    },
+  });
+};
 
 export const getMeServer = async (): Promise<User | null> => {
   try {
     const headers = await getAuthHeaders();
-    const { data } = await serverInstance.get<User>("/users/me", { headers });
+    const { data } = await noteInstance.get<User>("/users/me", { headers });
     return data;
   } catch (error) {
     console.error("getMeServer Error:", error);
@@ -33,21 +37,28 @@ export const getMeServer = async (): Promise<User | null> => {
 export const fetchNotesServer = async (params: FetchNotesParams) => {
   try {
     const headers = await getAuthHeaders();
-    const { data } = await serverInstance.get("/notes", {
-      params,
+
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined)
+    );
+
+    const { data } = await noteInstance.get("/notes", {
+      params: cleanParams,
       headers,
     });
     return data;
   } catch (error) {
-    console.error("Server Fetch Notes Error:", error);
+    if (isAxiosError(error) && error.response) {
+      console.error("Server Fetch Notes Error Data:", error.response.data);
+    }
     return null;
   }
 };
 
-export const fetchNoteByIdServer = async (id: string) => {
+export const fetchNoteByIdServer = async (id: string): Promise<Note | null> => {
   try {
     const headers = await getAuthHeaders();
-    const { data } = await serverInstance.get(`/notes/${id}`, { headers });
+    const { data } = await noteInstance.get<Note>(`/notes/${id}`, { headers });
     return data;
   } catch (error) {
     console.error("fetchNoteByIdServer Error:", error);
