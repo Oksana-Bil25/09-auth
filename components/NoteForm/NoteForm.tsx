@@ -3,35 +3,31 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { noteInstance } from "@/lib/api";
+import { createNote } from "@/lib/api/clientApi";
 import { useNoteStore } from "@/lib/store/noteStore";
 import css from "./NoteForm.module.css";
 
 const NoteForm = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
-
   const [isHydrated, setIsHydrated] = useState(false);
-
   const { draft, setDraft, clearDraft } = useNoteStore();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsHydrated(true);
   }, []);
 
   const mutation = useMutation({
-    mutationFn: async (newNote: typeof draft) => {
-      const { data } = await noteInstance.post("/notes", newNote);
-      return data;
-    },
+    mutationFn: createNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       clearDraft();
       router.back();
     },
     onError: (error) => {
-      console.error("Error saving note:", error);
-      alert("Failed to save note. Please try again.");
+      console.error(error);
+      alert("Error saving note.");
     },
   });
 
@@ -54,8 +50,11 @@ const NoteForm = () => {
   return (
     <form className={css.form} onSubmit={handleSubmit}>
       <div className={css.field}>
-        <label className={css.label}>Title</label>
+        <label className={css.label} htmlFor="title">
+          Title
+        </label>
         <input
+          id="title"
           name="title"
           className={css.input}
           value={draft.title}
@@ -66,8 +65,11 @@ const NoteForm = () => {
       </div>
 
       <div className={css.field}>
-        <label className={css.label}>Content</label>
+        <label className={css.label} htmlFor="content">
+          Content
+        </label>
         <textarea
+          id="content"
           name="content"
           className={css.textarea}
           value={draft.content}
@@ -78,8 +80,11 @@ const NoteForm = () => {
       </div>
 
       <div className={css.field}>
-        <label className={css.label}>Tag</label>
+        <label className={css.label} htmlFor="tag">
+          Tag
+        </label>
         <select
+          id="tag"
           name="tag"
           className={css.select}
           value={draft.tag}

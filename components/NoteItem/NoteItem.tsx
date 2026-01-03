@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Note } from "@/types/note";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteNote } from "@/lib/api";
+import { deleteNote } from "@/lib/api/clientApi";
+import Button from "../Button/Button";
 import css from "./NoteItem.module.css";
 
 interface NoteItemProps {
@@ -19,13 +20,13 @@ export default function NoteItem({ note }: NoteItemProps) {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
     onError: () => {
-      alert("Не вдалося видалити нотатку.");
+      alert("Failed to delete the note.");
     },
   });
 
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (confirm("Видалити цю нотатку?")) {
+    if (confirm("Are you sure you want to delete this note?")) {
       deleteMutation.mutate(note.id);
     }
   };
@@ -49,14 +50,13 @@ export default function NoteItem({ note }: NoteItemProps) {
             View details
           </Link>
 
-          <button
-            className={css.button}
+          <Button
+            variant="danger"
             onClick={handleDelete}
-            type="button"
             disabled={deleteMutation.isPending}
           >
             {deleteMutation.isPending ? "Deleting..." : "Delete"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

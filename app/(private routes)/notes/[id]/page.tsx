@@ -4,7 +4,7 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import { fetchNoteById } from "@/lib/api";
+import { fetchNoteByIdServer } from "@/lib/api/serverApi";
 import NoteDetailsClient from "./NoteDetails.client";
 import { Metadata } from "next";
 
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   try {
-    const note = await fetchNoteById(id);
+    const note = await fetchNoteByIdServer(id);
 
     return {
       title: `${note.title} | NoteHub`,
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         title: note.title,
         description: note.content.substring(0, 150),
-        url: `https://08-zustand-tau-two.vercel/notes/${id}`,
+        url: `https://08-zustand-tau-two.vercel.app/notes/${id}`,
         images: [
           {
             url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
@@ -47,7 +47,8 @@ export default async function NotePage({ params }: Props) {
   try {
     await queryClient.prefetchQuery({
       queryKey: ["note", id],
-      queryFn: () => fetchNoteById(id),
+
+      queryFn: () => fetchNoteByIdServer(id),
     });
   } catch {
     return notFound();
