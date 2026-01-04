@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { parse } from "cookie";
 import { checkSession } from "./lib/api/serverApi";
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const cookieStore = await cookies();
 
