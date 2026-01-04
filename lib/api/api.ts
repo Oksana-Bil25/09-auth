@@ -1,20 +1,9 @@
 import axios from "axios";
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL + "/api";
+const baseURL =
+  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000") + "/api";
 
-export const noteInstance = axios.create({
-  baseURL,
+export const api = axios.create({
+  baseURL: baseURL,
   withCredentials: true,
 });
-
-noteInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      return Promise.reject(error);
-    }
-
-    console.error("API Error:", error);
-    return Promise.reject(error);
-  }
-);

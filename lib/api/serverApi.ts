@@ -1,50 +1,59 @@
 import { cookies } from "next/headers";
-import { AxiosResponse, isAxiosError } from "axios";
-import { noteInstance } from "./api";
+import { isAxiosError } from "axios";
+import { api } from "./api";
 import { User } from "@/types/user";
 import { Note } from "@/types/note";
-import { FetchNotesParams } from "./clientApi";
 
 const getAuthHeaders = async () => {
   const cookieStore = await cookies();
-  const allCookies = cookieStore.toString();
-  return {
-    Cookie: allCookies,
-  };
+  return { Cookie: cookieStore.toString() };
 };
 
-export const checkSession = async (): Promise<AxiosResponse> => {
-  const headers = await getAuthHeaders();
-  return await noteInstance.get("/auth/session", { headers });
+export const checkSession = async () => {
+  try {
+    const headers = await getAuthHeaders();
+    return await api.get("/auth/session", { headers });
+  } catch {
+    return null;
+  }
 };
 
 export const getMeServer = async (): Promise<User | null> => {
   try {
     const headers = await getAuthHeaders();
-    const { data } = await noteInstance.get<User>("/users/me", { headers });
+    const { data } = await api.get<User>("/users/me", { headers });
     return data;
-  } catch (error) {
-    if (isAxiosError(error) && error.response?.status !== 401) {
-      console.error("getMeServer Error:", error);
-    }
+  } catch {
     return null;
   }
 };
 
-export const fetchNotesServer = async (params: FetchNotesParams) => {
+export const fetchNotesServer = async (
+  searchText: string = "",
+  page: number = 1,
+  tag?: string
+) => {
   try {
     const headers = await getAuthHeaders();
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([, value]) => value !== undefined)
-    );
-    const { data } = await noteInstance.get("/notes", {
-      params: cleanParams,
+
+    const params: Record<string, string | number | undefined> = {
+      search: searchText,
+      page,
+      perPage: 12,
+    };
+
+    if (tag && tag.toLowerCase() !== "all") {
+      params.tag = tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase();
+    }
+
+    const { data } = await api.get("/notes", {
+      params,
       headers,
     });
     return data;
   } catch (error) {
-    if (isAxiosError(error) && error.response) {
-      console.error("Server Fetch Notes Error Data:", error.response.data);
+    if (isAxiosError(error)) {
+      console.log("Server API Error:", error.response?.data);
     }
     return null;
   }
@@ -53,10 +62,9 @@ export const fetchNotesServer = async (params: FetchNotesParams) => {
 export const fetchNoteByIdServer = async (id: string): Promise<Note | null> => {
   try {
     const headers = await getAuthHeaders();
-    const { data } = await noteInstance.get<Note>(`/notes/${id}`, { headers });
+    const { data } = await api.get<Note>(`/notes/${id}`, { headers });
     return data;
-  } catch (error) {
-    console.error("fetchNoteByIdServer Error:", error);
+  } catch {
     return null;
   }
 };

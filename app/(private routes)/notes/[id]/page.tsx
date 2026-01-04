@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: note.title,
       description: note.content.substring(0, 150),
-      url: `https://08-zustand-tau-two.vercel.app/notes/${id}`,
+      url: `https://09-auth-delta-eosin.vercel.app/notes/${id}`,
       images: [
         {
           url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
@@ -45,10 +45,14 @@ export default async function NotePage({ params }: Props) {
 
   await queryClient.prefetchQuery({
     queryKey: ["note", id],
-    queryFn: () => fetchNoteByIdServer(id),
+    queryFn: async () => {
+      const data = await fetchNoteByIdServer(id);
+      if (!data) throw new Error("Note not found");
+      return data;
+    },
   });
 
-  const note = await fetchNoteByIdServer(id);
+  const note = queryClient.getQueryData(["note", id]);
 
   if (!note) {
     return notFound();

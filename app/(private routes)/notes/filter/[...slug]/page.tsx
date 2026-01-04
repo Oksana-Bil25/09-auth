@@ -48,8 +48,7 @@ export default async function FilteredNotesPage({ params }: PageProps) {
 
   await queryClient.prefetchQuery({
     queryKey: ["notes", tag, "", 1],
-
-    queryFn: () => fetchNotesServer({ tag, search: "", page: 1 }),
+    queryFn: () => fetchNotesServer("", 1, tag),
   });
 
   return (

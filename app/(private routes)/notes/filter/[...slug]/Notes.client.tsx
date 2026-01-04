@@ -22,8 +22,7 @@ export default function NotesClient({ tag }: NotesClientProps) {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["notes", tag, debouncedSearch, currentPage],
-    queryFn: () =>
-      fetchNotes({ tag, search: debouncedSearch, page: currentPage }),
+    queryFn: () => fetchNotes(debouncedSearch, currentPage, tag),
   });
 
   if (isLoading) return <div className={styles.app}>Loading...</div>;
