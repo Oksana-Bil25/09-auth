@@ -18,7 +18,8 @@ export default async function proxy(request: NextRequest) {
   if (!accessToken && refreshToken) {
     try {
       const response = await checkSession();
-      const setCookie = response.headers["set-cookie"];
+
+      const setCookie = response?.headers["set-cookie"];
 
       if (setCookie) {
         const nextResponse = isAuthRoute
