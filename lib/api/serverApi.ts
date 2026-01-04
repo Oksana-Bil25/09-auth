@@ -13,14 +13,9 @@ const getAuthHeaders = async () => {
   };
 };
 
-export const checkSession = async (
-  refreshToken: string
-): Promise<AxiosResponse> => {
-  return await noteInstance.get("/auth/session", {
-    headers: {
-      Authorization: `Bearer ${refreshToken}`,
-    },
-  });
+export const checkSession = async (): Promise<AxiosResponse> => {
+  const headers = await getAuthHeaders();
+  return await noteInstance.get("/auth/session", { headers });
 };
 
 export const getMeServer = async (): Promise<User | null> => {
@@ -29,7 +24,9 @@ export const getMeServer = async (): Promise<User | null> => {
     const { data } = await noteInstance.get<User>("/users/me", { headers });
     return data;
   } catch (error) {
-    console.error("getMeServer Error:", error);
+    if (isAxiosError(error) && error.response?.status !== 401) {
+      console.error("getMeServer Error:", error);
+    }
     return null;
   }
 };
@@ -37,11 +34,9 @@ export const getMeServer = async (): Promise<User | null> => {
 export const fetchNotesServer = async (params: FetchNotesParams) => {
   try {
     const headers = await getAuthHeaders();
-
     const cleanParams = Object.fromEntries(
       Object.entries(params).filter(([, value]) => value !== undefined)
     );
-
     const { data } = await noteInstance.get("/notes", {
       params: cleanParams,
       headers,

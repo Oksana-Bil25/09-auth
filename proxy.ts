@@ -1,58 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { parse } from "cookie";
 import { checkSession } from "./lib/api/serverApi";
-import { User } from "@/types/user";
 
-interface SessionData {
-  user: User;
-  tokens: { accessToken: string; refreshToken: string };
-}
-
-export default async function proxy(request: NextRequest) {
-  const accessToken = request.cookies.get("accessToken")?.value;
-  const refreshToken = request.cookies.get("refreshToken")?.value;
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const cookieStore = await cookies();
+
+  const accessToken = cookieStore.get("accessToken")?.value;
+  const refreshToken = cookieStore.get("refreshToken")?.value;
 
   const isPrivateRoute =
     pathname.startsWith("/notes") || pathname.startsWith("/profile");
   const isAuthRoute =
     pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
 
-  let user = null;
-  let newTokens = null;
-
-  if (!accessToken && refreshToken && isPrivateRoute) {
+  if (!accessToken && refreshToken) {
     try {
-      const response = await checkSession(refreshToken);
-      if (response.status === 200) {
-        const data = response.data as SessionData;
-        user = data.user;
-        newTokens = data.tokens;
+      const response = await checkSession();
+      const setCookie = response.headers["set-cookie"];
+
+      if (setCookie) {
+        const nextResponse = isAuthRoute
+          ? NextResponse.redirect(new URL("/", request.url))
+          : NextResponse.next();
+
+        const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
+
+        cookieArray.forEach((cookieStr) => {
+          const parsed = parse(cookieStr);
+          const name = Object.keys(parsed)[0];
+          const value = parsed[name];
+
+          if (name && value) {
+            nextResponse.cookies.set(name, value, {
+              path: parsed.Path || "/",
+              maxAge: parsed["Max-Age"] ? Number(parsed["Max-Age"]) : undefined,
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+            });
+          }
+        });
+
+        return nextResponse;
       }
     } catch {
-      console.error("Refresh failed");
+      console.error("Middleware Refresh Error");
     }
   }
 
-  const isAuthenticated = !!accessToken || !!user;
-
-  if (isPrivateRoute && !isAuthenticated) {
+  if (isPrivateRoute && !accessToken && !refreshToken) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
-  if (isAuthRoute && isAuthenticated) {
+  if (isAuthRoute && accessToken) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  const response = NextResponse.next();
-  if (newTokens) {
-    response.cookies.set("accessToken", newTokens.accessToken, {
-      httpOnly: true,
-      path: "/",
-    });
-    response.cookies.set("refreshToken", newTokens.refreshToken, {
-      httpOnly: true,
-      path: "/",
-    });
-  }
-  return response;
+  return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/profile/:path*", "/notes/:path*", "/sign-in", "/sign-up"],
+};

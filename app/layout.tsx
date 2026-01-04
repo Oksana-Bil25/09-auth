@@ -13,7 +13,6 @@ const roboto = Roboto({
   subsets: ["latin", "cyrillic"],
 });
 
-
 export const metadata: Metadata = {
   title: "NoteHub - Твій простір для нотаток",
   description:
@@ -49,7 +48,7 @@ export default function RootLayout({
         <Providers>
           <AuthProvider>
             <Header />
-            <main style={{ minHeight: "80vh" }}>{children}</main>
+            <main>{children}</main>
             {modal}
             <Footer />
           </AuthProvider>

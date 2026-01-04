@@ -2,24 +2,36 @@
 
 import { ReactNode, useEffect } from "react";
 import { useAuthStore } from "@/lib/store/authStore";
-import { User } from "@/types/user";
+import { getMe } from "@/lib/api/clientApi";
+import { isAxiosError } from "axios";
 
 interface AuthProviderProps {
   children: ReactNode;
-  initialUser?: User | null;
 }
 
-export default function AuthProvider({
-  children,
-  initialUser,
-}: AuthProviderProps) {
+export default function AuthProvider({ children }: AuthProviderProps) {
   const setUser = useAuthStore((state) => state.setUser);
 
   useEffect(() => {
-    if (initialUser) {
-      setUser(initialUser);
-    }
-  }, [initialUser, setUser]);
+    const initAuth = async () => {
+      try {
+
+        const user = await getMe();
+        setUser(user);
+      } catch (error) {
+
+        if (isAxiosError(error) && error.response?.status === 401) {
+          setUser(null);
+        } else {
+
+          console.error("Auth initialization error:", error);
+          setUser(null);
+        }
+      }
+    };
+
+    initAuth();
+  }, [setUser]);
 
   return <>{children}</>;
 }

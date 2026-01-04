@@ -59,7 +59,9 @@ export const updateMe = async (userData: Partial<User>): Promise<User> => {
   return data;
 };
 
-export const fetchNotes = async (params: FetchNotesParams): Promise<NotesResponse> => {
+export const fetchNotes = async (
+  params: FetchNotesParams
+): Promise<NotesResponse> => {
   const { data } = await noteInstance.get<NotesResponse>("/notes", { params });
   return data;
 };
@@ -69,7 +71,9 @@ export const fetchNoteById = async (id: string): Promise<Note> => {
   return data;
 };
 
-export const createNote = async (noteData: CreateNoteRequest): Promise<Note> => {
+export const createNote = async (
+  noteData: CreateNoteRequest
+): Promise<Note> => {
   const { data } = await noteInstance.post<Note>("/notes", noteData);
   return data;
 };

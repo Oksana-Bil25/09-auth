@@ -20,7 +20,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "100vh",
+        flex: 1,
         backgroundColor: "#f5f5f5",
       }}
     >
