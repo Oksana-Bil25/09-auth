@@ -40,6 +40,14 @@ export default function AuthNavigation() {
             </Link>
           </li>
           <li className={css.navigationItem}>
+            <Link
+              href="/profile"
+              className={`${buttonCss.button} ${buttonCss.large}`}
+            >
+              Profile
+            </Link>
+          </li>
+          <li className={css.navigationItem}>
             <span className={css.userEmail}>{user.email}</span>
           </li>
           <li className={css.navigationItem}>

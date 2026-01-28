@@ -4,12 +4,12 @@ import { Note } from "@/types/note";
 
 export interface RegisterRequest {
   email: string;
-  password?: string;
+  password: string;
 }
 
 export interface LoginRequest {
   email: string;
-  password?: string;
+  password: string;
 }
 
 export interface FetchNotesParams {
@@ -62,7 +62,7 @@ export const updateMe = async (userData: Partial<User>): Promise<User> => {
 export const fetchNotes = async (
   search: string = "",
   page: number = 1,
-  tag?: string
+  tag?: string,
 ): Promise<NotesResponse> => {
   const params: Record<string, string | number | undefined> = {
     search,
@@ -71,7 +71,6 @@ export const fetchNotes = async (
   };
 
   if (tag && tag.toLowerCase() !== "all" && tag !== "") {
-  
     params.tag = tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase();
   }
 
@@ -85,7 +84,7 @@ export const fetchNoteById = async (id: string): Promise<Note> => {
 };
 
 export const createNote = async (
-  noteData: CreateNoteRequest
+  noteData: CreateNoteRequest,
 ): Promise<Note> => {
   const { data } = await api.post<Note>("/notes", noteData);
   return data;
